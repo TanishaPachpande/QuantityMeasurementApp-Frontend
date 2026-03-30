@@ -1,0 +1,199 @@
+/* RESET */
+html, body, #root {
+  height: 100vh;
+  width:100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* BACKGROUND */
+body {
+  background: #7d7d7d;
+}
+
+/* ================= LOGIN PAGE ================= */
+
+.main-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* LEFT CARD */
+.left-card {
+  background: #e5e5e5;
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  width: 300px;
+  margin-right: -40px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.left-card img {
+  width: 180px;
+}
+
+.left-card h3 {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+/* RIGHT CARD */
+.right-card {
+  background: #efefef;
+  padding: 30px;
+  border-radius: 10px;
+  width: 350px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.tabs span {
+  cursor: pointer;
+  color: #777;
+}
+
+.tabs .active {
+  color: black;
+  border-bottom: 2px solid maroon;
+}
+
+/* Form */
+.form label {
+  display: block;
+  margin: 10px 0 5px;
+}
+
+.form input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+/* Password */
+.password-field {
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  flex: 1;
+}
+
+.password-field span {
+  margin-left: -30px;
+  cursor: pointer;
+}
+
+/* Button */
+.submit-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  background: #a83232;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background: #8b2a2a;
+}
+
+/* ================= DASHBOARD ================= */
+
+.dashboard {
+  height: 100%;
+  background: #f2f3f7;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(to right, #4a6cf7, #5a7dfc);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  margin: 0;
+}
+
+/* CONTAINER */
+.dashboard-container {
+  padding: 40px;
+}
+
+/* TYPE CARDS */
+.type-cards {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.card {
+  background: #eee;
+  width: 140px;
+  height: 120px;
+  border-radius: 10px;
+  text-align: center;
+  padding-top: 20px;
+  cursor: pointer;
+  font-size: 30px;
+  color: #aaa;
+  transition: 0.3s;
+}
+
+.card p {
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* ACTIVE CARD */
+.active-card {
+  background: #dff5ef;
+  color: #00a67e;
+  border: 2px solid #00a67e;
+}
+
+/* CONVERSION SECTION */
+.conversion {
+  display: flex;
+  gap: 40px;
+  margin-top: 30px;
+}
+
+.conversion div {
+  width: 250px;
+}
+
+.conversion label {
+  font-size: 12px;
+  color: #777;
+}
+
+/* INPUT BOX */
+.conversion input {
+  width: 100%;
+  padding: 15px;
+  font-size: 24px;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  outline: none;
+}
+
+/* SELECT */
+.conversion select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+}
