@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quantity Measurement</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/dashboard.css"/>
+</head>
+<body>
+
+<header>
+  <h1>Welcome To Quantity Measurement</h1>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="main">
+
+  <p class="section-title">Choose Type</p>
+  <div class="type-grid">
+    <div class="type-card active" id="type-length" onclick="selectType('length')">
+      <span>📏</span>
+      <p>Length</p>
+    </div>
+    <div class="type-card" id="type-weight" onclick="selectType('weight')">
+      <span>⚖️</span>
+      <p>Weight</p>
+    </div>
+    <div class="type-card" id="type-temperature" onclick="selectType('temperature')">
+      <span>🌡️</span>
+      <p>Temperature</p>
+    </div>
+    <div class="type-card" id="type-volume" onclick="selectType('volume')">
+      <span>🧴</span>
+      <p>Volume</p>
+    </div>
+  </div>
+
+  <p class="section-title">Choose Action</p>
+  <div class="action-row">
+    <button class="action-btn active" id="act-comparison" onclick="selectAction('comparison')">Comparison</button>
+    <button class="action-btn" id="act-conversion" onclick="selectAction('conversion')">Conversion</button>
+    <button class="action-btn" id="act-arithmetic" onclick="selectAction('arithmetic')">Arithmetic</button>
+  </div>
+
+  <!-- Comparison -->
+  <div class="panel active" id="panel-comparison">
+    <div class="two-col">
+      <div class="col-block">
+        <p class="col-title">From</p>
+        <input class="big-input" type="number" id="comp-from-val" value="1" oninput="compute()"/>
+        <select class="unit-select" id="comp-from-unit" onchange="compute()"></select>
+      </div>
+      <div class="col-block">
+        <p class="col-title">To</p>
+        <input class="big-input" type="number" id="comp-to-val" value="1000" oninput="compute()"/>
+        <select class="unit-select" id="comp-to-unit" onchange="compute()"></select>
+      </div>
+    </div>
+    <div class="result-box">
+      <p class="result-title">Result</p>
+      <div class="result-row">
+        <p id="comp-result" class="result-text">—</p>
+        <select class="result-unit-select" id="comp-result-unit" onchange="compute()"></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversion -->
+  <div class="panel" id="panel-conversion">
+    <div class="two-col">
+      <div class="col-block">
+        <p class="col-title">Value</p>
+        <input class="big-input" type="number" id="conv-val" value="1" oninput="compute()"/>
+        <select class="unit-select" id="conv-from-unit" onchange="compute()"></select>
+      </div>
+      <div class="arrow">→</div>
+      <div class="col-block">
+        <p class="col-title">Convert To</p>
+        <br/>
+        <select class="unit-select" id="conv-to-unit" onchange="compute()"></select>
+      </div>
+    </div>
+    <div class="result-box">
+      <p class="result-title">Result</p>
+      <p id="conv-result" class="result-text">—</p>
+    </div>
+  </div>
+
+  <!-- Arithmetic -->
+  <div class="panel" id="panel-arithmetic">
+    <div class="two-col">
+      <div class="col-block">
+        <p class="col-title">Value 1</p>
+        <input class="big-input" type="number" id="arith-val1" value="1" oninput="compute()"/>
+        <select class="unit-select" id="arith-unit1" onchange="compute()"></select>
+      </div>
+      <div class="op-box">
+        <select id="arith-op" onchange="compute()">
+          <option value="+">+</option>
+          <option value="-">−</option>
+          <option value="*">×</option>
+          <option value="/">÷</option>
+        </select>
+      </div>
+      <div class="col-block">
+        <p class="col-title">Value 2</p>
+        <input class="big-input" type="number" id="arith-val2" value="1" oninput="compute()"/>
+        <select class="unit-select" id="arith-unit2" onchange="compute()"></select>
+      </div>
+    </div>
+    <div class="result-box">
+      <p class="result-title">Result</p>
+      <div class="result-row">
+        <p id="arith-result" class="result-text">—</p>
+        <select class="result-unit-select" id="arith-result-unit" onchange="compute()"></select>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/dashboard.js"></script>
+</body>
+</html>
