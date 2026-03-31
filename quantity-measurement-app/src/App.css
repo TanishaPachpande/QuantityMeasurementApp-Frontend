@@ -227,3 +227,171 @@
   padding: 10px;
   background: #fafafa;
 }
+
+/* --- UPDATED INPUT ROW FOR ARITHMETIC --- */
+
+/* Ensures the layout adjusts when the operator dropdown appears */
+.input-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end; /* Aligns inputs and the operator dropdown at the bottom */
+  margin-bottom: 30px;
+}
+
+/* New: Styling for the Operator Column */
+.operator-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 8px; /* Aligns with the input boxes */
+}
+
+.operator-group label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.op-select {
+  height: 50px;
+  width: 60px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fafafa;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #4a77ff;
+  cursor: pointer;
+  outline: none;
+}
+
+/* --- CALCULATE BUTTON --- */
+
+.calculate-btn {
+  width: 100%;
+  padding: 15px;
+  background: #4a77ff; /* Matches your Blue Hero color */
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 20px;
+}
+
+.calculate-btn:hover {
+  background: #365fdb;
+}
+
+/* --- TYPE CARD ACTIVE STATES --- */
+
+/* You had .active-length; let's make a generic active state for all types */
+.type-card.active {
+  border: 2px solid #4ade80;
+  background-color: rgba(74, 222, 128, 0.05);
+}
+
+.type-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+/* --- AUTH NAV FIX --- */
+.auth-nav span {
+  transition: all 0.3s ease;
+}
+
+/* --- FIX CONGESTION --- */
+
+.input-row {
+  display: flex;
+  gap: 15px;            /* Tighten gap slightly to allow more internal space */
+  align-items: flex-end; /* Aligns all elements to the bottom of the row */
+  justify-content: center;
+  width: 100%;
+}
+
+.operator-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;      /* IMPORTANT: Forces the side boxes to stay away */
+  padding-bottom: 25px; /* Adjust this to center the circle between inputs */
+}
+
+.op-dropdown {
+  appearance: none;
+  background-color: #f0f4ff;
+  border: 1px solid #dce4ff;
+  color: #4a77ff;
+  width: 50px;          /* Slightly larger for better clickability */
+  height: 50px;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 22px;      /* Larger font for symbols */
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(74, 119, 255, 0.15);
+  z-index: 10;          /* Ensures it stays on top */
+}
+
+/* Ensure the Value fields don't grow too much and squash the middle */
+.field-group {
+  flex: 1;              /* Allows both fields to be equal width */
+  min-width: 0;         /* Prevents flex-children from overflowing */
+}
+
+/* --- IMPROVED VISIBILITY FOR INPUT BOXES --- */
+
+.input-with-select {
+  /* Darkened border from #eee to #bbb */
+  border: 1.5px solid #bbb; 
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 8px;
+  background: #fff;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Add a focus effect so the user knows exactly which box is active */
+.input-with-select:focus-within {
+  border-color: #4a77ff;
+  box-shadow: 0 0 0 3px rgba(74, 119, 255, 0.1);
+}
+
+.input-with-select input {
+  width: 100%;
+  border: none;
+  padding: 15px;
+  /* Darkened text color for better contrast */
+  color: #333; 
+  font-size: 16px;
+  background: transparent;
+  outline: none;
+}
+
+/* Optional: Add a subtle inner shadow to make the box look "inset" */
+.input-with-select input::placeholder {
+  color: #888;
+}
+
+/* Darken the dropdown part slightly to match */
+.input-with-select select {
+  width: 100%;
+  border: none;
+  padding: 10px;
+  background: #f0f0f0; /* Darkened from #fafafa */
+  border-top: 1.5px solid #bbb;
+  cursor: pointer;
+  color: #444;
+  font-weight: 500;
+}
