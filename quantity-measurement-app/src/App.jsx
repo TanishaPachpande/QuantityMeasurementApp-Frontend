@@ -21,11 +21,15 @@ export default function App() {
   });
 
   const unitOptions = {
-    LENGTH: ["FEET", "INCHES", "YARDS", "CENTIMETERS"],
-    WEIGHT: ["GRAM", "KILOGRAM", "TONNE", "MILLIGRAM", "POUND"],
-    TEMPERATURE: ["CELSIUS", "FAHRENHEIT", "KELVIN"],
-    VOLUME: ["LITRE", "MILLILITRE", "GALLON"]
-  };
+  // Java expects: "FEET", "INCHES", "YARDS", "CENTIMETERS"
+  LENGTH: ["FEET", "INCHES", "YARDS", "CENTIMETERS"], 
+  // Java expects: "MILLIGRAM", "GRAM", "KILOGRAM", "POUND", "TONNE"
+  WEIGHT: ["GRAM", "KILOGRAM", "TONNE", "MILLIGRAM", "POUND"],
+  // Java expects: "LITRE", "MILLILITRE", "GALLON"
+  VOLUME: ["LITRE", "MILLILITRE", "GALLON"],
+  // Java expects: "CELSIUS", "FAHRENHEIT", "KELVIN"
+  TEMPERATURE: ["CELSIUS", "FAHRENHEIT", "KELVIN"]
+};
 
   const handleAuth = async (authType) => {
     const url = `http://localhost:8080/auth/${authType}`;
@@ -49,62 +53,64 @@ export default function App() {
   };
 
   const handleCalculate = async () => {
-    // FIX 1: Added 'operator' to the destructuring list
-    const { action, type, fromUnit, toUnit, fromValue, toValue, operator } = measurementData;
+  const { action, type, fromUnit, toUnit, fromValue, toValue, operator } = measurementData;
 
-    const backendTypeMap = {
-      LENGTH: "LengthUnit",
-      WEIGHT: "WeightUnit",
-      TEMPERATURE: "TemperatureUnit",
-      VOLUME: "VolumeUnit"
-    };
-
-    const payload = {
-      thisQuantityDTO: {
-        value: parseFloat(fromValue) || 0,
-        unit: fromUnit.toUpperCase(),
-        measurementType: backendTypeMap[type]
-      },
-      thatQuantityDTO: {
-        // FIX 2: Ensures Value 2 is sent for comparison/arithmetic
-        value: action === "conversion" ? 0 : (parseFloat(toValue) || 0),
-        unit: toUnit.toUpperCase(),
-        measurementType: backendTypeMap[type]
-      },
-      targetUnit: toUnit.toUpperCase()
-    };
-
-    const opMap = { "+": "add", "-": "subtract", "/": "divide", "*": "multiply" };
-    let endpoint = action === "conversion" ? "convert" :
-      action === "comparison" ? "compare" :
-        (opMap[operator] || "add");
-
-    try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      };
-
-      const response = await axios.post(
-        `http://localhost:8080/api/v1/quantities/${endpoint}`,
-        payload,
-        { headers }
-      );
-
-      if (response.data && response.data.result !== undefined) {
-        setMeasurementData(prev => ({
-          ...prev,
-          toValue: response.data.result.toString()
-        }));
-      }
-    } catch (error) {
-      // Better error logging for debugging
-      console.error("Calculation Error:", error);
-      const errorMsg = error.response?.data?.message || "Check connection or validation.";
-      alert(`Error: ${errorMsg}`);
-    }
+  // 1. Map to your Backend @Pattern regex: "LengthUnit|WeightUnit|..."
+  const backendTypeMap = {
+    LENGTH: "LengthUnit",
+    WEIGHT: "WeightUnit",
+    TEMPERATURE: "TemperatureUnit",
+    VOLUME: "VolumeUnit"
   };
+
+  // 2. Construct the Payload
+  const payload = {
+    thisQuantityDTO: {
+      value: parseFloat(fromValue) || 0,
+      unit: fromUnit.toUpperCase(),
+      measurementType: backendTypeMap[type]
+    },
+    thatQuantityDTO: {
+      // Fix: Send a dummy 0 for conversion to satisfy Java @NotNull/@AssertTrue
+      value: action === "conversion" ? 0 : (parseFloat(toValue) || 0),
+      unit: toUnit.toUpperCase(),
+      measurementType: backendTypeMap[type]
+    },
+    targetUnit: toUnit.toUpperCase()
+  };
+
+  // 3. Dynamic Endpoint Mapping
+  const opMap = { "+": "add", "-": "subtract", "/": "divide", "*": "multiply" };
+  let endpoint = action === "conversion" ? "convert" : 
+                 action === "comparison" ? "compare" : 
+                 (opMap[operator] || "add");
+
+  try {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}` // Ensure your UC18 Auth logic is satisfied
+    };
+
+    // --- Inside handleCalculate ---
+const response = await axios.post(
+  `http://localhost:8080/api/v1/quantities/${endpoint}`,
+  payload,
+  { headers }
+);
+
+// FIX: Change 'result' to 'resultValue' to match your Java DTO
+if (response.data && response.data.resultValue !== undefined) {
+  setMeasurementData(prev => ({
+    ...prev,
+    toValue: response.data.resultValue.toString()
+  }));
+}
+  } catch (error) {
+    console.error("Submission Error:", error.response?.data);
+    alert(`Error: ${error.response?.data?.message || "Check console for validation details"}`);
+  }
+};
 
   if (isLoggedIn) {
     return (
