@@ -21,28 +21,35 @@
   flex: 1;
   padding: 40px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column; 
+  align-items: center;    /* Horizontal Center */
+  justify-content: center; /* Vertical Center */
+  background-color: #ffffff;
   border-right: 1px solid #f0f0f0;
 }
 
 .graphic-circle {
   width: 200px;
   height: 200px;
-}
-
-.graphic-circle img {
-  width: 100%;
-  filter: grayscale(100%);
-  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px; /* Pulls text closer to logo */
 }
 
 .graphic-text {
-  font-weight: bold;
-  margin-top: 20px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
   color: #333;
+  text-transform: uppercase;
 }
+.graphic-circle img {
+  width: 100%;
+  object-fit: contain;        
+}
+
+
 
 .side-form {
   flex: 1;
