@@ -55,7 +55,6 @@ export default function App() {
   const handleCalculate = async () => {
   const { action, type, fromUnit, toUnit, fromValue, toValue, operator } = measurementData;
 
-  // 1. Map to your Backend @Pattern regex: "LengthUnit|WeightUnit|..."
   const backendTypeMap = {
     LENGTH: "LengthUnit",
     WEIGHT: "WeightUnit",
@@ -63,7 +62,6 @@ export default function App() {
     VOLUME: "VolumeUnit"
   };
 
-  // 2. Construct the Payload
   const payload = {
     thisQuantityDTO: {
       value: parseFloat(fromValue) || 0,
@@ -71,7 +69,7 @@ export default function App() {
       measurementType: backendTypeMap[type]
     },
     thatQuantityDTO: {
-      // Fix: Send a dummy 0 for conversion to satisfy Java @NotNull/@AssertTrue
+      // Logic: Send 0 for conversion, actual value for others
       value: action === "conversion" ? 0 : (parseFloat(toValue) || 0),
       unit: toUnit.toUpperCase(),
       measurementType: backendTypeMap[type]
@@ -79,7 +77,6 @@ export default function App() {
     targetUnit: toUnit.toUpperCase()
   };
 
-  // 3. Dynamic Endpoint Mapping
   const opMap = { "+": "add", "-": "subtract", "/": "divide", "*": "multiply" };
   let endpoint = action === "conversion" ? "convert" : 
                  action === "comparison" ? "compare" : 
@@ -87,28 +84,21 @@ export default function App() {
 
   try {
     const token = localStorage.getItem('token');
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` // Ensure your UC18 Auth logic is satisfied
-    };
+    const response = await axios.post(
+      `http://localhost:8080/api/v1/quantities/${endpoint}`,
+      payload,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
 
-    // --- Inside handleCalculate ---
-const response = await axios.post(
-  `http://localhost:8080/api/v1/quantities/${endpoint}`,
-  payload,
-  { headers }
-);
-
-// FIX: Change 'result' to 'resultValue' to match your Java DTO
-if (response.data && response.data.resultValue !== undefined) {
-  setMeasurementData(prev => ({
-    ...prev,
-    toValue: response.data.resultValue.toString()
-  }));
-}
+    // EXACT FIX: Mapping 'resultValue' from your Java QuantityMeasurementDTO
+    if (response.data && response.data.resultValue !== undefined) {
+      setMeasurementData(prev => ({
+        ...prev,
+        toValue: response.data.resultValue.toString()
+      }));
+    }
   } catch (error) {
-    console.error("Submission Error:", error.response?.data);
-    alert(`Error: ${error.response?.data?.message || "Check console for validation details"}`);
+    alert("Error: " + (error.response?.data?.message || "Check Backend Connection"));
   }
 };
 
