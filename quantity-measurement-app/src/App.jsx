@@ -6,7 +6,7 @@ export default function App() {
   const [tab, setTab] = useState("signup");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [history, setHistory] = useState([]);
-  const [currentView, setCurrentView] = useState("dashboard"); // "dashboard" or "history"
+  const [currentView, setCurrentView] = useState("dashboard");
 
   const [measurementData, setMeasurementData] = useState({
     type: "LENGTH",
@@ -30,64 +30,80 @@ export default function App() {
     TEMPERATURE: ["CELSIUS", "FAHRENHEIT", "KELVIN"]
   };
 
+  // --- AUTHENTICATION (Talking to Security Service via Gateway) ---
   const handleAuth = async (authType) => {
     const url = `http://localhost:8080/auth/${authType}`;
     const payload = authType === "register"
-      ? { name: form.name, email: form.email, password: form.password, mobileNumber: form.mobileNumber }
-      : { email: form.email, password: form.password };
-
+      ? {
+        name: form.name,           // Use 'name', not 'fullName'
+        email: form.email,
+        password: form.password,
+        mobileNumber: form.mobileNumber
+      }
+      : {
+        email: form.email,
+        password: form.password
+      };
     try {
       const response = await axios.post(url, payload);
       if (authType === "login") {
-        localStorage.setItem('token', response.data.token);
-        setIsLoggedIn(true);
-        alert("Login successful!");
+        // Check common keys returned by Spring Security
+        const token = response.data.token || response.data.jwt || response.data;
+        if (token) {
+          localStorage.setItem('token', token);
+          setIsLoggedIn(true);
+          alert("Login successful!");
+        } else {
+          throw new Error("Token not found in response");
+        }
       } else {
         alert("Registration successful! Please login.");
         setTab("login");
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Authentication failed");
+      alert(error.response?.data?.message || "Authentication failed. Check Gateway/Service.");
     }
   };
 
+  // --- HISTORY (Talking to Quantity Service via Gateway) ---
   const fetchHistory = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Using your operation/compare endpoint as requested
-      const response = await axios.get(`http://localhost:8080/api/v1/quantities/history/operation/compare`, {
+      const response = await axios.get(`http://localhost:8080/api/v1/quantities/history`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setHistory(response.data);
-      setCurrentView("history"); // Switch to the separate history page
+      setCurrentView("history");
     } catch (error) {
-      alert("Failed to fetch history. Check if the endpoint exists.");
+      alert("Failed to fetch history. Ensure Quantity Service is UP in Eureka.");
     }
   };
 
   const handleClearHistory = async () => {
-    if (window.confirm("Are you sure you want to delete all history records?")) {
+    if (window.confirm("Delete all history records?")) {
       try {
         const token = localStorage.getItem('token');
         await axios.delete(`http://localhost:8080/api/v1/quantities/history/clear`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        setHistory([]); // Clear the local state so the UI updates immediately
+        setHistory([]);
         alert("History cleared!");
       } catch (error) {
-        alert("Failed to clear history. Check if the delete endpoint is implemented.");
+        alert("Failed to clear history.");
       }
     }
   };
 
+  // --- CALCULATION (Talking to Quantity Service via Gateway) ---
   const handleCalculate = async () => {
     const { action, type, fromUnit, toUnit, fromValue, toValue, operator } = measurementData;
 
+    // Mapping to match your Java Backend Enums
     const backendTypeMap = {
-      LENGTH: "LengthUnit",
-      WEIGHT: "WeightUnit",
-      TEMPERATURE: "TemperatureUnit",
-      VOLUME: "VolumeUnit"
+      LENGTH: "LENGTH",
+      WEIGHT: "WEIGHT",
+      TEMPERATURE: "TEMPERATURE",
+      VOLUME: "VOLUME"
     };
 
     const payload = {
@@ -119,62 +135,46 @@ export default function App() {
 
       if (response.data) {
         if (action === "comparison") {
-          const isTrue = response.data.resultValue === 1.0 || response.data.resultString === "true";
+          const isTrue = response.data.resultString === "true" || response.data.resultValue === 1.0;
           setMeasurementData(prev => ({
             ...prev,
             comparisonStatus: isTrue ? "EQUAL" : "NOT EQUAL"
           }));
-        } else if (action === "arithmetic") {
-          setMeasurementData(prev => ({
-            ...prev,
-            comparisonStatus: response.data.resultValue.toString()
-          }));
         } else {
+          // If action is conversion or arithmetic, update the result
           setMeasurementData(prev => ({
             ...prev,
             toValue: response.data.resultValue.toString(),
-            comparisonStatus: null
+            comparisonStatus: action === "arithmetic" ? response.data.resultValue.toString() : null
           }));
         }
       }
     } catch (error) {
       console.error(error);
-      alert("Error: Check Backend Connection");
+      alert("Error: Ensure API-GATEWAY and QUANTITY-SERVICE are running.");
     }
   };
 
   if (isLoggedIn) {
     return (
       <div className="dashboard-view">
-        {/* Navigation Bar - Persistent on all views */}
         <div className="top-nav">
           <span className="brand-name" onClick={() => setCurrentView("dashboard")} style={{ cursor: 'pointer' }}>
             Quantity Measurement App
           </span>
-
           <div className="nav-links">
-            {/* This logic ensures the button only shows during Comparison */}
-            {measurementData.action === "comparison" && currentView === "dashboard" && (
-              <span
-                className="history-link"
-                onClick={fetchHistory}
-                style={{ cursor: 'pointer', marginRight: '20px', color: '#007bff', fontWeight: 'bold' }}
-              >
-                History
-              </span>
-            )}
-
-            <button className="logout-pill" onClick={() => setIsLoggedIn(false)}>Logout</button>
+            <span className="history-link" onClick={fetchHistory} style={{ cursor: 'pointer', marginRight: '20px' }}>
+              History
+            </span>
+            <button className="logout-pill" onClick={() => { localStorage.removeItem('token'); setIsLoggedIn(false); }}>Logout</button>
           </div>
         </div>
 
-        {/* View Switcher */}
         {currentView === "dashboard" ? (
           <div className="dashboard-content">
-            <div className="blue-hero"><h1>Welcome To Quantity Measurement</h1></div>
-
+            <div className="blue-hero"><h1>Quantity Measurement Portal</h1></div>
             <div className="card-container">
-              <p className="sub-header">CHOOSE TYPE</p>
+              <p className="sub-header">SELECT CATEGORY</p>
               <div className="type-grid">
                 {Object.keys(unitOptions).map((t) => (
                   <div key={t} className={`type-card ${measurementData.type === t ? `active` : ""}`}
@@ -183,24 +183,24 @@ export default function App() {
                       {t === "LENGTH" && "📏"} {t === "WEIGHT" && "⚖️"}
                       {t === "TEMPERATURE" && "🌡️"} {t === "VOLUME" && "🧪"}
                     </div>
-                    <p>{t.charAt(0) + t.slice(1).toLowerCase()}</p>
+                    <p>{t}</p>
                   </div>
                 ))}
               </div>
 
-              <p className="sub-header">CHOOSE ACTION</p>
+              <p className="sub-header">SELECT OPERATION</p>
               <div className="action-toggle">
-                {["comparison", "conversion", "arithmetic"].map((m) => (
+                {["conversion", "comparison", "arithmetic"].map((m) => (
                   <button key={m} className={`toggle-btn ${measurementData.action === m ? "selected" : ""}`}
-                    onClick={() => setMeasurementData({ ...measurementData, action: m, toValue: "", comparisonStatus: null })}>
-                    {m.charAt(0).toUpperCase() + m.slice(1)}
+                    onClick={() => setMeasurementData({ ...measurementData, action: m, toValue: "", fromValue: "", comparisonStatus: null })}>
+                    {m.toUpperCase()}
                   </button>
                 ))}
               </div>
 
               <div className="input-row">
                 <div className="field-group">
-                  <label>{measurementData.action === "conversion" ? "FROM" : "VALUE 1"}</label>
+                  <label>VALUE 1</label>
                   <div className="input-with-select">
                     <input type="number" value={measurementData.fromValue} onChange={(e) => setMeasurementData({ ...measurementData, fromValue: e.target.value })} />
                     <select value={measurementData.fromUnit} onChange={(e) => setMeasurementData({ ...measurementData, fromUnit: e.target.value })}>
@@ -218,10 +218,10 @@ export default function App() {
                 )}
 
                 <div className="field-group">
-                  <label>{measurementData.action === "conversion" ? "TO" : "VALUE 2"}</label>
+                  <label>{measurementData.action === "conversion" ? "RESULT" : "VALUE 2"}</label>
                   <div className="input-with-select">
                     <input
-                      type="number"
+                      type="text"
                       value={measurementData.toValue}
                       readOnly={measurementData.action === 'conversion'}
                       onChange={(e) => setMeasurementData({ ...measurementData, toValue: e.target.value })}
@@ -233,82 +233,49 @@ export default function App() {
                 </div>
               </div>
 
-              <button className="calculate-btn" onClick={handleCalculate}>Calculate</button>
+              <button className="calculate-btn" onClick={handleCalculate}>Submit Request</button>
 
-              {(measurementData.action === 'comparison' || measurementData.action === 'arithmetic') &&
-                measurementData.comparisonStatus && (
-                  <div className="mt-4 text-center">
-                    <hr />
-                    <h3 className={`fw-bold ${measurementData.comparisonStatus === "EQUAL" ? "text-success" : measurementData.comparisonStatus === "NOT EQUAL" ? "text-danger" : "text-primary"}`}>
-                      Result: {measurementData.comparisonStatus}
-                    </h3>
-                  </div>
-                )}
+              {measurementData.comparisonStatus && (
+                <div className="result-display">
+                  <hr />
+                  <h3 className={measurementData.comparisonStatus === "EQUAL" ? "text-success" : "text-primary"}>
+                    Result: {measurementData.comparisonStatus}
+                  </h3>
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          /* --- SEPARATE HISTORY PAGE VIEW --- */
+          /* --- HISTORY VIEW --- */
           <div className="history-page-container container mt-5">
-            <div className="history-card mx-auto shadow-sm border-0 bg-white p-4 rounded">
+            <div className="history-card bg-white p-4 rounded shadow">
               <div className="d-flex justify-content-between align-items-center mb-4">
-
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h2 className="display-6 fw-bold text-dark">Measurement History</h2>
-                  <div className="btn-group">
-                    <button className="btn btn-outline-danger me-2" onClick={handleClearHistory}>
-                      🗑️ Clear All History
-                    </button>
-                    <button className="btn btn-outline-secondary" onClick={() => setCurrentView("dashboard")}>
-                      ← Back to Calculator
-                    </button>
-                  </div>
+                <h2 className="fw-bold">Audit History</h2>
+                <div>
+                  <button className="btn btn-danger me-2" onClick={handleClearHistory}>Clear Data</button>
+                  <button className="btn btn-secondary" onClick={() => setCurrentView("dashboard")}>Back</button>
                 </div>
               </div>
-
-              <div className="table-responsive">
-                <table className="table table-custom mb-0">
-                  <thead>
-                    <tr>
-                      <th className="ps-4">Operation</th>
-                      <th>Input 1</th>
-                      <th>Unit 1</th>
-                      <th>Input 2</th>
-                      <th>Unit 2</th>
-                      <th className="pe-4">Result</th>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Input 1</th>
+                    <th>Input 2</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.operation}</td>
+                      <td>{item.thisValue} {item.thisUnit}</td>
+                      <td>{item.thatValue} {item.thatUnit}</td>
+                      <td>{item.resultValue || item.resultString}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {history.length > 0 ? (
-                      history.map((item, index) => (
-                        <tr key={index}>
-                          <td className="ps-4">
-                            <span className={`badge ${item.operation === 'compare' ? 'bg-info text-dark' : 'bg-warning text-dark'}`}>
-                              {item.operation.toUpperCase()}
-                            </span>
-                          </td>
-                          <td>{item.thisValue}</td>
-                          <td className="text-muted">{item.thisUnit}</td>
-                          <td>{item.thatValue}</td>
-                          <td className="text-muted">{item.thatUnit}</td>
-                          <td className="pe-4 fw-bold">
-                            {item.operation === 'compare' ? (
-                              <span className={item.resultString === "true" ? "text-success" : "text-danger"}>
-                                {item.resultString === "true" ? "MATCH" : "MISMATCH"}
-                              </span>
-                            ) : (
-                              <span className="text-primary">{item.resultValue}</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="text-center py-5 text-muted">No records found.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
@@ -320,27 +287,22 @@ export default function App() {
     <div className="auth-wrapper">
       <div className="auth-box">
         <div className="side-graphic">
-  <div className="graphic-circle">
-  <img 
-    src="https://png.pngtree.com/png-clipart/20230812/original/pngtree-measure-measurement-centimeter-metric-vector-picture-image_10460965.png" 
-    alt="Quantity Measurement Logo" 
-  />
-</div>
-  <div className="graphic-text">
-    QUANTITY MEASUREMENT APP
-  </div>
-</div>
+          <div className="graphic-circle">
+            <img src="https://png.pngtree.com/png-clipart/20230812/original/pngtree-measure-measurement-centimeter-metric-vector-picture-image_10460965.png" alt="Logo" />
+          </div>
+          <div className="graphic-text">QUANTITY MEASUREMENT</div>
+        </div>
         <div className="side-form">
           <div className="auth-nav">
             <span className={tab === "login" ? "active" : ""} onClick={() => setTab("login")}>LOGIN</span>
             <span className={tab === "signup" ? "active" : ""} onClick={() => setTab("signup")}>SIGNUP</span>
           </div>
           <div className="form-fields">
-            {tab === "signup" && <div className="field"><label>Full Name</label><input onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>}
-            <div className="field"><label>Email Id</label><input onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-            <div className="field"><label>Password</label><input type="password" onChange={(e) => setForm({ ...form, password: e.target.value })} /></div>
-            {tab === "signup" && <div className="field"><label>Mobile Number</label><input onChange={(e) => setForm({ ...form, mobileNumber: e.target.value })} /></div>}
-            <button className="maroon-btn" onClick={() => handleAuth(tab === "signup" ? "register" : "login")}>{tab === "signup" ? "Signup" : "Login"}</button>
+            {tab === "signup" && <div className="field"><label>Full Name</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>}
+            <div className="field"><label>Email Id</label><input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+            <div className="field"><label>Password</label><input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></div>
+            {tab === "signup" && <div className="field"><label>Mobile Number</label><input value={form.mobileNumber} onChange={(e) => setForm({ ...form, mobileNumber: e.target.value })} /></div>}
+            <button className="maroon-btn" onClick={() => handleAuth(tab === "signup" ? "register" : "login")}>{tab === "signup" ? "Create Account" : "Login"}</button>
           </div>
         </div>
       </div>
