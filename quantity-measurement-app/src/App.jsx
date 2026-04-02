@@ -35,36 +35,45 @@ export default function App() {
     const url = `http://localhost:8080/auth/${authType}`;
     const payload = authType === "register"
       ? {
-        name: form.name,           // Use 'name', not 'fullName'
+        name: form.name,
         email: form.email,
         password: form.password,
         mobileNumber: form.mobileNumber
       }
-      : {
-        email: form.email,
-        password: form.password
-      };
+      : { email: form.email, password: form.password };
+
     try {
       const response = await axios.post(url, payload);
-      if (authType === "login") {
-        // Check common keys returned by Spring Security
-        const token = response.data.token || response.data.jwt || response.data;
-        if (token) {
-          localStorage.setItem('token', token);
-          setIsLoggedIn(true);
-          alert("Login successful!");
+
+      // If we get a 200/201 status, the backend DID its job
+      if (response.status === 200 || response.status === 201) {
+        if (authType === "login") {
+          // Extract token: handles raw string OR {token: "..."} OR {jwt: "..."}
+          const token = typeof response.data === 'string'
+            ? response.data
+            : (response.data.token || response.data.jwt || response.data);
+
+          if (token && typeof token === 'string' && token.length > 20) {
+            localStorage.setItem('token', token);
+            setIsLoggedIn(true);
+            alert("Login successful!");
+          } else {
+            // If login was 200 but token is missing/invalid
+            console.error("Payload received:", response.data);
+            alert("Login successful, but token format is invalid. Check Backend Controller.");
+          }
         } else {
-          throw new Error("Token not found in response");
+          alert("Registration successful! Please login.");
+          setTab("login");
         }
-      } else {
-        alert("Registration successful! Please login.");
-        setTab("login");
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Authentication failed. Check Gateway/Service.");
+      // This only runs if the server returns 4xx or 5xx
+      console.error("Full Error Object:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Unknown Error";
+      alert(`Server Error: ${errorMsg}`);
     }
   };
-
   // --- HISTORY (Talking to Quantity Service via Gateway) ---
   const fetchHistory = async () => {
     try {
