@@ -109,11 +109,11 @@ export default function App() {
 
     // Mapping to match your Java Backend Enums
     const backendTypeMap = {
-      LENGTH: "LENGTH",
-      WEIGHT: "WEIGHT",
-      TEMPERATURE: "TEMPERATURE",
-      VOLUME: "VOLUME"
-    };
+  LENGTH: "LengthUnit",
+  WEIGHT: "WeightUnit",
+  TEMPERATURE: "TemperatureUnit",
+  VOLUME: "VolumeUnit"
+};
 
     const payload = {
       thisQuantityDTO: {
