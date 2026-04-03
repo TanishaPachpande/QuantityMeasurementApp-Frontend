@@ -181,7 +181,7 @@ export default function App() {
 
         {currentView === "dashboard" ? (
           <div className="dashboard-content">
-            <div className="blue-hero"><h1>Quantity Measurement Portal</h1></div>
+            <div className="blue-hero"><h1>Welcome To Quantity Measurement</h1></div>
             <div className="card-container">
               <p className="sub-header">SELECT CATEGORY</p>
               <div className="type-grid">
@@ -242,7 +242,7 @@ export default function App() {
                 </div>
               </div>
 
-              <button className="calculate-btn" onClick={handleCalculate}>Submit Request</button>
+              <button className="calculate-btn" onClick={handleCalculate}>Calculate</button>
 
               {measurementData.comparisonStatus && (
                 <div className="result-display">
